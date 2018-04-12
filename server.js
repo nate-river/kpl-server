@@ -4,8 +4,9 @@ const cheerio = require('cheerio');
 const express = require('express');
 const moment = require('moment');
 const async = require('async');
+const fs = require('fs');
 const app = express();
-const port = 18080;
+const port = 5000;
 app.use(express.static('./pics'));
 app.get('/schedule', (req, res) => {
     let formData = {
@@ -61,17 +62,22 @@ app.get('/schedule', (req, res) => {
         res.json({status:200,result});
     });
 });
-app.get('/match',(req,res)=>{
-    let url = req.query.url;
-    match_list(url, function (data) {
-        if(data){
-            res.json({status:200,data});
-        }else{
-            res.json({status:404})
-        }
-
-    });
+app.get('/match', (req, res) => {
+    let id = req.query.id;
+    if (fs.existsSync(`./pics/match/${id}.json`)) {
+        res.json(require(`./pics/match/${id}.json`));
+    } else {
+        match_list(`http://www.wanplus.com/schedule/${id}.html`, function (data) {
+            if (data) {
+                fs.writeFileSync(`./pics/match/${id}.json`, JSON.stringify(data,null,4));
+                res.json({status: 200, data});
+            } else {
+                res.json({status: 404})
+            }
+        });
+    }
 });
+
 function match_list(url, callback) {
     let d = [];
     request({
