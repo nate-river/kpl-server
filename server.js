@@ -5,10 +5,12 @@ const express = require('express');
 const moment = require('moment');
 const async = require('async');
 const fs = require('fs');
+const path = require('path');
 const app = express();
 const port = 5000;
 app.use(express.static('./pics'));
-app.get('/schedule', (req, res) => {
+
+function get_schedule(callback) {
     let formData = {
         _gtk: 1794037024,
         eId: 592,
@@ -25,47 +27,56 @@ app.get('/schedule', (req, res) => {
             'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36'
         }
     }, (err, header, body) => {
-        if(err){
-            res.json({status:404})
+        if (err) {
+            callback(null)
+        } else {
+            let $ = cheerio.load(body);
+            let result = [];
+            $('.fix_list .war').each((index, el) => {
+                let id = Number(path.basename($(el).find('.teams a').attr('href'), '.html'));
+                let date = (() => {
+                    let t = $(el).find('.NO .time').map((index, v) => $(v).text()).get();
+                    t.unshift('2018');
+                    return moment(t.join('-'), 'YYYY-MM-DD-HH:mm')
+                })();
+                let logos = $(el).find('.teamlogo img').map((index, el) => $(el).attr('src')).get();
+                let names = $(el).find('.teamname').map((index, el) => $(el).text()).get();
+                let scores = $(el).find('.teamcode').map((index, el) => $(el).text()).get();
+                let match = {
+                    id,
+                    date,
+                    hometeam: {
+                        name: names[0],
+                        id: Number(path.basename(logos[0], '.png').split('_')[0]),
+                        score: Number(scores[0])
+                    },
+                    guesteam: {
+                        name: names[1],
+                        id: Number(path.basename(logos[1], '.png').split('_')[0]),
+                        score: Number(scores[1])
+                    }
+                };
+                result.push(match);
+            });
+            callback(result);
         }
-        let $ = cheerio.load(body);
-        let result = {};
-        $('.fix_list .war').each((index, el) => {
-            let t = $(el).find('.NO .time').map((index, v) => $(v).text()).get();
+    });
+}
 
-            let date = t[0]|| moment().format('MM-DD');
-            let time = t[1];
-            let link = $(el).find('.teams a').attr('href');
-
-            let logos = $(el).find('.teamlogo img').map((index, el) => $(el).attr('src')).get();
-            let names = $(el).find('.teamname').map((index, el) => $(el).text()).get();
-            let scores = $(el).find('.teamcode').map((index, el) => $(el).text()).get();
-            let data = {
-                link: link,
-                time: time,
-                teamA: {
-                    name: names[0],
-                    logo: logos[0],
-                    score: scores[0]
-                },
-                teamB: {
-                    name: names[1],
-                    logo: logos[1],
-                    score: scores[1]
-                }
-            };
-            if (!result[date]) {
-                result[date] = [];
-            }
-            result[date].push(data);
-        });
-        res.json({status:200,result});
+app.get('/schedule', (req, res) => {
+    get_schedule((result)=>{
+        if( result ){
+           res.json({status:200,result});
+        }else{
+	   res.json({status:404});
+        }
     });
 });
+
 app.get('/match', (req, res) => {
     let id = req.query.id;
     if (fs.existsSync(`./pics/match/${id}.json`)) {
-        res.json(require(`./pics/match/${id}.json`));
+        res.json({status:200,data:require(`./pics/match/${id}.json`)});
     } else {
         match_list(`http://www.wanplus.com/schedule/${id}.html`, function (data) {
             if (data) {
