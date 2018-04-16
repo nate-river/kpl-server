@@ -10,6 +10,111 @@ const app = express();
 const port = 5000;
 app.use(express.static('./pics'));
 
+function match_list(url, callback) {
+    let matchs = [];
+    request({
+        url: url
+    }, (err, header, body) => {
+        let $ = cheerio.load(body);
+        let urls = $('.matching_mn1_list li')
+            .map((i, v) => $(v).attr('match'))
+            .get()
+            .map((v, i) => {
+                return {
+                    id: v,
+                    url: 'http://www.wanplus.com/match/' + v + '.html',
+                }
+            });
+        async.eachLimit(urls, 1, function (v, callback) {
+            match_detail(v.url, function (data) {
+                matchs.push({
+                    id: v.id,
+                    hometeam: data.hometeam,
+                    guesteam: data.guesteam
+                });
+                callback()
+            })
+        }, function (err) {
+            if (!err) {
+                callback(matchs);
+            }
+        });
+    });
+}
+
+
+function match_detail(url, callback) {
+    request({
+        url: url
+    }, (err, header, body) => {
+        if (err) {
+            return null;
+        }
+        let $ = cheerio.load(body);
+
+        let teams = $('.bssj_top a');
+        teams = [teams.eq(0).find('.tl').attr('value'), teams.eq(1).find('.tr').attr('value')];
+
+        let names = $('.matching_intro a').eq(1).find('span');
+        names = [names.eq(0).text(), names.eq(2).text()];
+
+        let scores = [0, 0];
+
+        if ($('.bssj_winl').prev('i').text().trim()) {
+            scores = [1, 0];
+        } else {
+            scores = [0, 1]
+        }
+
+        let data = {
+            hometeam: {
+                id: teams[0],
+                name: names[0],
+                score: scores[0],
+                ban: [],
+                pick: []
+            },
+            guesteam: {
+                id: teams[1],
+                name: names[1],
+                score: scores[1],
+                ban: [],
+                pick: []
+            }
+        };
+        $('.match_bans_list>li').each(function (index, el) {
+            let heroes = $(this).find('.bans_top .bans_img .bbans').map((i, v) => $(v).attr('data-itemid')).get();
+            let users = $(this).find('.bans_tx p a').map((i, v) => $(v).attr('href')).get();
+            let teamAeq = $(this).find('.bans_l .bans_bot a').map((i, v) => $(v).attr('href').match(/\d+/g)[0]).get();
+            let teamBeq = $(this).find('.bans_r .bans_bot a').map((i, v) => $(v).attr('href').match(/\d+/g)[0]).get();
+            let kdas = $(this).find('.bans_m ul li').eq(0).find('span').map((i, v) => $(v).text()).get();
+            let moneys = $(this).find('.bans_m ul li').eq(1).find('span').map((i, v) => $(v).text()).get();
+            let damages = $(this).find('.bans_m ul li').eq(2).find('span').map((i, v) => $(v).text()).get();
+            let endures = $(this).find('.bans_m ul li').eq(3).find('span').map((i, v) => $(v).text()).get();
+
+            data.hometeam.pick.push({
+                user: users[0].match(/\d+/g)[0],
+                hero: heroes[0],
+                equ: teamAeq,
+                kda: kdas[0],
+                money: moneys[0],
+                damage: damages[0],
+                endure: endures[0],
+            });
+            data.guesteam.pick.push({
+                user: users[3].match(/\d+/g)[0],
+                hero: heroes[1],
+                equ: teamBeq,
+                kda: kdas[2],
+                money: moneys[2],
+                damage: damages[2],
+                endure: endures[2],
+            })
+        });
+        callback(data);
+    });
+}
+
 function get_schedule(callback) {
     let formData = {
         _gtk: 1794037024,
@@ -89,69 +194,19 @@ app.get('/match', (req, res) => {
     }
 });
 
-function match_list(url, callback) {
-    let d = [];
-    request({
-        url: url
-    }, (err, header, body) => {
-        let $ = cheerio.load(body);
-        let urls = $('.matching_mn1_list li')
-            .map((i, v) => $(v).attr('match'))
-            .get()
-            .map((v, i) => 'http://www.wanplus.com/match/' + v + '.html');
-        async.eachLimit(urls, 1, function (v, callback) {
-            match_detail(v, function (data) {
-                d.push({
-                    matchId: v,
-                    d: data
-                });
-                callback()
-            })
-        }, function (err) {
-            if (!err) {
-                callback(d);
-            }else{
-                callback(null);
-            }
-        });
-    });
-}
-//match detail
-function match_detail(url, callback) {
-    request({
-        url: url
-    }, (err, header, body) => {
-        if (err) {
-            callback(null);
-        }
-        let $ = cheerio.load(body);
-        let data = {
-            teamA: {
-                ban: [],
-                pick: []
-            },
-            teamB: {
-                ban: [],
-                pick: []
-            }
-        };
-        $('.match_bans_list>li').each(function (index, el) {
-            let heroes = $(this).find('.bans_top .bans_img .bbans').map((i, v) => $(v).attr('data-itemid')).get();
-            let users = $(this).find('.bans_tx p a').map((i, v) => $(v).attr('href')).get();
-            let teamAeq = $(this).find('.bans_l .bans_bot a').map((i, v) => $(v).attr('href').match(/\d+/g)[0]).get();
-            let teamBeq = $(this).find('.bans_r .bans_bot a').map((i, v) => $(v).attr('href').match(/\d+/g)[0]).get();
-            data.teamA.pick.push({
-                user: users[0].match(/\d+/g)[0],
-                hero: heroes[0],
-                equ: teamAeq
-            });
-            data.teamB.pick.push({
-                user: users[3].match(/\d+/g)[0],
-                hero: heroes[1],
-                equ: teamBeq
-            })
-        });
-        callback(data);
-    });
-}
+app.get('/rate',(req,res)=>{
+	request(
+	    {
+		url: 'https://www.wanplus.com/api.php?&sig=a4f435e7d8796353a944985f2b6fbdc3&eid=592&c=App_Stats&gm=kog&_param=862979037100221%7Cand%7C200%7C350%7C22%7C1523618719410%7C763552%7CkK514%2BTzPy3maUv8nzn9l%2B2fVqK1%2FyHDd8Mz0VLw55Pj5dW5xvmCEiQ11N9tHKs%7C4%7C&m=heroStats',
+		headers: {
+		    userAgent: 'Dalvik/2.1.0 (Linux; U; Android 5.1.1; vivo X7 Build/LMY47V)',
+		}
+	    },
+	    (err,header,body)=>{
+		let r = JSON.parse(body);
+		res.json(r.data.statsList);
+	    }
+	);
+});
+
 app.listen(port);
