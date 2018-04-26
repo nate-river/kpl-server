@@ -85,6 +85,7 @@ function match_detail(url, callback) {
         $('.match_bans_list>li').each(function (index, el) {
             let heroes = $(this).find('.bans_top .bans_img .bbans').map((i, v) => $(v).attr('data-itemid')).get();
             let users = $(this).find('.bans_tx p a').map((i, v) => $(v).attr('href')).get();
+            let names = $(this).find('.bans_tx p a strong').map((i, v) => $(v).text()).get();
             let teamAeq = $(this).find('.bans_l .bans_bot a').map((i, v) => $(v).attr('href').match(/\d+/g)[0]).get();
             let teamBeq = $(this).find('.bans_r .bans_bot a').map((i, v) => $(v).attr('href').match(/\d+/g)[0]).get();
             let kdas = $(this).find('.bans_m ul li').eq(0).find('span').map((i, v) => $(v).text()).get();
@@ -94,6 +95,7 @@ function match_detail(url, callback) {
 
             data.hometeam.pick.push({
                 user: users[0].match(/\d+/g)[0],
+		user_name:names[0],
                 hero: heroes[0],
                 equ: teamAeq,
                 kda: kdas[0],
@@ -103,6 +105,7 @@ function match_detail(url, callback) {
             });
             data.guesteam.pick.push({
                 user: users[3].match(/\d+/g)[0],
+		user_name:names[1],
                 hero: heroes[1],
                 equ: teamBeq,
                 kda: kdas[2],
@@ -141,8 +144,12 @@ function get_schedule(callback) {
                 let id = Number(path.basename($(el).find('.teams a').attr('href'), '.html'));
                 let date = (() => {
                     let t = $(el).find('.NO .time').map((index, v) => $(v).text()).get();
-                    t.unshift('2018');
-                    return moment(t.join('-'), 'YYYY-MM-DD-HH:mm')
+		    if(t.length){
+                        t.unshift('2018');
+                        return moment(t.join('-'), 'YYYY-MM-DD-HH:mm')
+		    }else{
+			return moment();
+                    }
                 })();
                 let logos = $(el).find('.teamlogo img').map((index, el) => $(el).attr('src')).get();
                 let names = $(el).find('.teamname').map((index, el) => $(el).text()).get();
@@ -185,8 +192,16 @@ app.get('/match', (req, res) => {
     } else {
         match_list(`http://www.wanplus.com/schedule/${id}.html`, function (data) {
             if (data) {
-                fs.writeFileSync(`./pics/match/${id}.json`, JSON.stringify(data,null,4));
-                res.json({status: 200, data});
+               let x = 0;
+               let y = 0;
+               data.forEach((v, i) => {
+			x += v.hometeam.score
+			y += v.guesteam.score
+               });
+		    if (x === 3 || y === 3) {
+			fs.writeFileSync(`./pics/match/${id}.json`, JSON.stringify(data,null,4));
+		    }
+		res.json({status: 200, data});
             } else {
                 res.json({status: 404})
             }
