@@ -4,7 +4,9 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "up-hero":"node ./utils/update_hero.js",
+    "up-equ":"node ./utils/update_equ.js"
   },
   "author": "",
   "license": "ISC",

@@ -95,7 +95,7 @@ function match_detail(url, callback) {
 
             data.hometeam.pick.push({
                 user: users[0].match(/\d+/g)[0],
-		user_name:names[0],
+                user_name: names[0],
                 hero: heroes[0],
                 equ: teamAeq,
                 kda: kdas[0],
@@ -105,7 +105,7 @@ function match_detail(url, callback) {
             });
             data.guesteam.pick.push({
                 user: users[3].match(/\d+/g)[0],
-		user_name:names[1],
+                user_name: names[1],
                 hero: heroes[1],
                 equ: teamBeq,
                 kda: kdas[2],
@@ -144,11 +144,11 @@ function get_schedule(callback) {
                 let id = Number(path.basename($(el).find('.teams a').attr('href'), '.html'));
                 let date = (() => {
                     let t = $(el).find('.NO .time').map((index, v) => $(v).text()).get();
-		    if(t.length){
+                    if (t.length) {
                         t.unshift('2018');
                         return moment(t.join('-'), 'YYYY-MM-DD-HH:mm')
-		    }else{
-			return moment();
+                    } else {
+                        return moment();
                     }
                 })();
                 let logos = $(el).find('.teamlogo img').map((index, el) => $(el).attr('src')).get();
@@ -176,11 +176,11 @@ function get_schedule(callback) {
 }
 
 app.get('/schedule', (req, res) => {
-    get_schedule((result)=>{
-        if( result ){
-           res.json({status:200,result});
-        }else{
-	   res.json({status:404});
+    get_schedule((result) => {
+        if (result) {
+            res.json({status: 200, result});
+        } else {
+            res.json({status: 404});
         }
     });
 });
@@ -188,20 +188,20 @@ app.get('/schedule', (req, res) => {
 app.get('/match', (req, res) => {
     let id = req.query.id;
     if (fs.existsSync(`./pics/match/${id}.json`)) {
-        res.json({status:200,data:require(`./pics/match/${id}.json`)});
+        res.json({status: 200, data: require(`./pics/match/${id}.json`)});
     } else {
         match_list(`http://www.wanplus.com/schedule/${id}.html`, function (data) {
             if (data) {
-               let x = 0;
-               let y = 0;
-               data.forEach((v, i) => {
-			x += v.hometeam.score
-			y += v.guesteam.score
-               });
-		    if (x === 3 || y === 3) {
-			fs.writeFileSync(`./pics/match/${id}.json`, JSON.stringify(data,null,4));
-		    }
-		res.json({status: 200, data});
+                let x = 0;
+                let y = 0;
+                data.forEach((v, i) => {
+                    x += v.hometeam.score;
+                    y += v.guesteam.score;
+                });
+                if (x === 3 || y === 3) {
+                    fs.writeFileSync(`./pics/match/${id}.json`, JSON.stringify(data, null, 4));
+                }
+                res.json({status: 200, data});
             } else {
                 res.json({status: 404})
             }
@@ -209,19 +209,19 @@ app.get('/match', (req, res) => {
     }
 });
 
-app.get('/rate',(req,res)=>{
-	request(
-	    {
-		url: 'https://www.wanplus.com/api.php?&sig=a4f435e7d8796353a944985f2b6fbdc3&eid=592&c=App_Stats&gm=kog&_param=862979037100221%7Cand%7C200%7C350%7C22%7C1523618719410%7C763552%7CkK514%2BTzPy3maUv8nzn9l%2B2fVqK1%2FyHDd8Mz0VLw55Pj5dW5xvmCEiQ11N9tHKs%7C4%7C&m=heroStats',
-		headers: {
-		    userAgent: 'Dalvik/2.1.0 (Linux; U; Android 5.1.1; vivo X7 Build/LMY47V)',
-		}
-	    },
-	    (err,header,body)=>{
-		let r = JSON.parse(body);
-		res.json(r.data.statsList);
-	    }
-	);
+app.get('/rate', (req, res) => {
+    request(
+        {
+            url: 'https://www.wanplus.com/api.php?&sig=a4f435e7d8796353a944985f2b6fbdc3&eid=592&c=App_Stats&gm=kog&_param=862979037100221%7Cand%7C200%7C350%7C22%7C1523618719410%7C763552%7CkK514%2BTzPy3maUv8nzn9l%2B2fVqK1%2FyHDd8Mz0VLw55Pj5dW5xvmCEiQ11N9tHKs%7C4%7C&m=heroStats',
+            headers: {
+                userAgent: 'Dalvik/2.1.0 (Linux; U; Android 5.1.1; vivo X7 Build/LMY47V)',
+            }
+        },
+        (err, header, body) => {
+            let r = JSON.parse(body);
+            res.json(r.data.statsList);
+        }
+    );
 });
 
 app.listen(port);
