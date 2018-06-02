@@ -7,7 +7,7 @@ const async = require('async');
 const fs = require('fs');
 const path = require('path');
 const app = express();
-const port = 5000;
+const port = 8888;
 app.use(express.static('./pics'));
 
 function match_list(url, callback) {
@@ -224,4 +224,19 @@ app.get('/rate', (req, res) => {
     );
 });
 
+app.get('/hero_rank', (req, res) => {
+    request(
+        {
+            url: 'http://cgi.datamore.qq.com/datamore/smobahelper/herorank?mode=HeroRank2&userId=480299043&token=kDBm93WV&openid=owanlsnSOo_dGmbMb_kGPJHbMHmY&serverId=4060&uniqueRoleId=1360791437&unAuth=true&HeroType=0&GradeOfRank=1',
+            headers: {
+                userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 11_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E302;GameHelper',
+		Referer:'http://pvp.qq.com/act/idata_more_dev/career.html?toOpenid=owanlsnSOo_dGmbMb_kGPJHbMHmY&areaId=4&roleId=1099550493&appOpenid=oFhrws4tN9RyY40dxQV5cPy2-pp8&accessToken=10_ARtatSdEx5yDmCcRq8TXzog9rDN9eZhdXxjZqsozdaK71rUZ9Kinc93W6pv_PrvjwW3szvaY4TV97CK7mKUXm2n4wcv-58y4QTXTnQRyLoA&gameId=20001&serverName=%E5%BE%AE%E4%BF%A150%E5%8C%BA&roleLevel=30&openid=owanlsnSOo_dGmbMb_kGPJHbMHmY&userId=480299043&token=kDBm93WV&areaName=%E8%8B%B9%E6%9E%9C&roleName=SC%E2%80%A2%E6%B8%B8%E4%BE%A0&isMainRole=1&nickname=%E9%A9%AC%E5%BD%A6%E9%BE%99&uniqueRoleId=1360791437&serverId=4060&roleJob=%E6%B0%B8%E6%81%92%E9%92%BB%E7%9F%B3I'
+            }
+        },
+        (err, header, body) => {
+            let r = JSON.parse(body);
+            res.json(r.Data.data);
+        }
+    );
+});
 app.listen(port);
