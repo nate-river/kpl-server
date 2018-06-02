@@ -213,7 +213,7 @@ function get_jishousai(cb) {
             } else {
                 let $ = cheerio.load(body);
                 $('.fix_list .war').each((index, el) => {
-                    let id = Number(path.basename($(el).find('.teams a').attr('href'), '.html'));
+                    let id = Number(path.basename($(el).find('.teams a:last-child').attr('href'), '.html'));
                     let date = (() => {
                         let t = $(el).find('.NO .time').map((index, v) => $(v).text()).get();
                         if (t.length) {
@@ -292,7 +292,7 @@ app.get('/match', (req, res) => {
                     x += v.hometeam.score;
                     y += v.guesteam.score;
                 });
-                if (x === 3 || y === 3) {
+                if (x >= 3 || y >= 3) {
                     fs.writeFileSync(`./pics/match/${id}.json`, JSON.stringify(data, null, 4));
                 }
                 res.json({status: 200, data});
