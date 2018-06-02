@@ -333,4 +333,34 @@ app.get('/hero_rank', (req, res) => {
         }
     );
 });
+
+app.get('/hero_equs', (req, res) => {
+    let hero_id = req.query.hero_id;
+    let result = [];
+    let files = fs.readdirSync('./pics/match');
+    for (let i = 0; i < files.length; i++) {
+        let v = files[i];
+        if (v !== '.gitkeep') {
+            if (result.length >= 20) {
+                res.json(result);
+                return;
+            }
+            let data = require('./pics/match/' + v);
+            data.forEach(item => {
+                item.hometeam.pick.forEach(pick => {
+                    if (pick.hero == hero_id) {
+                        result.push(pick)
+                    }
+                });
+                item.guesteam.pick.forEach(pick => {
+                    if (pick.hero == hero_id) {
+                        result.push(pick)
+                    }
+                });
+            })
+
+        }
+    }
+    res.json(result);
+});
 app.listen(port);
