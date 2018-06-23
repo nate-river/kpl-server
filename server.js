@@ -321,10 +321,10 @@ app.get('/rate', (req, res) => {
 app.get('/hero_rank', (req, res) => {
     request(
         {
-            url: 'http://cgi.datamore.qq.com/datamore/smobahelper/herorank?mode=HeroRank2&userId=480299043&token=VwEuyzPS&openid=owanlsnSOo_dGmbMb_kGPJHbMHmY&serverId=4060&uniqueRoleId=1360791437&unAuth=true&HeroType=0&GradeOfRank=1',
+            url: 'http://cgi.datamore.qq.com/datamore/smobahelper/herorank?mode=HeroRank2&userId=480299043&token=h38F54hP&openid=owanlsnSOo_dGmbMb_kGPJHbMHmY&serverId=4060&uniqueRoleId=1360791437&unAuth=true&HeroType=0&GradeOfRank=1',
             headers: {
                 userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 11_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E302;GameHelper',
-                Referer: 'http://pvp.qq.com/act/idata_more_dev/career.html?toOpenid=owanlsnSOo_dGmbMb_kGPJHbMHmY&areaId=4&roleId=1099550493&appOpenid=oFhrws4tN9RyY40dxQV5cPy2-pp8&accessToken=10_ARtatSdEx5yDmCcRq8TXzog9rDN9eZhdXxjZqsozdaK71rUZ9Kinc93W6pv_PrvjwW3szvaY4TV97CK7mKUXm2n4wcv-58y4QTXTnQRyLoA&gameId=20001&serverName=%E5%BE%AE%E4%BF%A150%E5%8C%BA&roleLevel=30&openid=owanlsnSOo_dGmbMb_kGPJHbMHmY&userId=480299043&token=kDBm93WV&areaName=%E8%8B%B9%E6%9E%9C&roleName=SC%E2%80%A2%E6%B8%B8%E4%BE%A0&isMainRole=1&nickname=%E9%A9%AC%E5%BD%A6%E9%BE%99&uniqueRoleId=1360791437&serverId=4060&roleJob=%E6%B0%B8%E6%81%92%E9%92%BB%E7%9F%B3I'
+                Referer: 'http://pvp.qq.com/act/idata_more_dev/career.html?toOpenid=owanlsnSOo_dGmbMb_kGPJHbMHmY&areaId=4&roleId=1099550493&appOpenid=oFhrws4tN9RyY40dxQV5cPy2-pp8&accessToken=11_S_Nqb45p0lKHpm0_z6iCS-V4l3s_yKlm4cDy2EwiJsmcIw8ZqcWC7TH-2haBKT7arKCQEKuMlkkfKWmvkwRFOURzBCAdc6JxGVgogpxalUI&gameId=20001&serverName=%E5%BE%AE%E4%BF%A150%E5%8C%BA&roleLevel=30&openid=owanlsnSOo_dGmbMb_kGPJHbMHmY&userId=480299043&token=h38F54hP&areaName=%E8%8B%B9%E6%9E%9C&roleName=SC%E2%80%A2%E6%B8%B8%E4%BE%A0&isMainRole=1&nickname=%E9%A9%AC%E5%BD%A6%E9%BE%99&uniqueRoleId=1360791437&serverId=4060&roleJob=%E8%87%B3%E5%B0%8A%E6%98%9F%E8%80%80V',
             }
         },
         (err, header, body) => {
@@ -338,6 +338,7 @@ app.get('/hero_equs', (req, res) => {
     let hero_id = req.query.hero_id;
     let result = [];
     let files = fs.readdirSync('./pics/match');
+    files.reverse();
     for (let i = 0; i < files.length; i++) {
         let v = files[i];
         if (v !== '.gitkeep') {
